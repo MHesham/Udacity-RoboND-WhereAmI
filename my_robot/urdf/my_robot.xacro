@@ -32,8 +32,12 @@
   <xacro:property name="lidar_z" value="${0.05 + (chassis_height / 2)}"/>
 
   <xacro:property name="diff_drive_wheel_spec">
-    <wheelSeparation>${wheel_y * 2}"</wheelSeparation>
-    <wheelDiameter>${wheel_radius * 2}</wheelDiameter>
+    <!-- This works on Melodic, but not Kinetic:
+    <wheelSeparation>${wheel_y * 2}"</wheelSeparation> -->
+    <wheelSeparation>0.6</wheelSeparation>
+    <!-- This works on Melodic, but not Kinetic:
+    <wheelDiameter>${wheel_radius * 2}</wheelDiameter> -->
+    <wheelDiameter>0.6</wheelDiameter>
     <torque>30</torque>
     <wheelTorque>15</wheelTorque>
     <wheelAcceleration>0</wheelAcceleration>
