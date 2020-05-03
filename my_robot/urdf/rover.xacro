@@ -1,0 +1,146 @@
+<?xml version='1.0'?>
+
+<robot name="rover" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <link name="robot_footprint"></link>
+
+  <joint name="robot_footprint_joint" type="fixed">
+    <origin xyz="0 0 0" rpy="0 0 0" />
+    <parent link="robot_footprint"/>
+    <child link="chassis" />
+  </joint>
+
+  <xacro:property name="chassis_length" value="0.305"/>
+  <xacro:property name="chassis_width" value="0.2286"/>
+  <xacro:property name="chassis_height" value="0.124"/>
+  <xacro:property name="chassis_mass" value="2.98"/>
+
+  <xacro:property name="wheel_length" value="0.058"/>
+  <xacro:property name="wheel_mass" value="0.135"/>
+  <xacro:property name="wheel_radius" value="0.065"/>
+  <xacro:property name="wheel_x" value="0.115"/>
+  <xacro:property name="wheel_y" value="0.169"/>
+  <xacro:property name="wheel_z" value="-0.041"/>
+
+  <xacro:property name="lidar_z" value="${0.05 + (chassis_height / 2)}"/>
+  <xacro:property name="lidar_x" value="${(chassis_length / 2) - 0.05}"/>
+
+  <xacro:property name="skid_steer_wheel_spec">
+    <wheelSeparation>0.336</wheelSeparation>
+    <wheelDiameter>0.13</wheelDiameter>
+    <torque>5</torque>
+  </xacro:property>
+
+  <material name="white">
+    <color rgba="1 1 1 1"/>
+  </material>
+
+  <material name="gray">
+    <color rgba="0.5 0.5 0.5 1"/>
+  </material>
+
+  <xacro:macro name="wheel" params="prefix x_reflect y_reflect">
+    <link name='${prefix}_wheel'>
+      <visual name='visual'>
+        <origin xyz="0 0 0" rpy=" 0 1.5707 1.5707"/>
+        <geometry>
+          <cylinder radius="${wheel_radius}" length="${wheel_length}"/>
+        </geometry>
+        <material name="gray"/>
+      </visual>
+      <collision name='collision'>
+        <origin xyz="0 0 0" rpy=" 0 1.5707 1.5707"/>
+        <geometry>
+          <cylinder radius="${wheel_radius}" length="${wheel_length}"/>
+        </geometry>
+      </collision>
+      <inertial>
+        <mass value="${wheel_mass}"/>
+        <origin xyz="0 0 0" rpy=" 0 0 0"/>
+        <!-- Moment of inertia tensor calculated based on the equation of Solid cylinder of radius
+             r, height h and mass m from
+             https://en.wikipedia.org/wiki/List_of_moments_of_inertia#List_of_3D_inertia_tensors -->
+        <inertia
+            ixx="0.000180439" ixy="0" ixz="0"
+            iyy="0.000180439" iyz="0"
+            izz="0.000285188"
+        />
+      </inertial>
+    </link>
+    <joint type="continuous" name="${prefix}_wheel_joint">
+      <origin xyz="${x_reflect * wheel_x} ${y_reflect * wheel_y} ${wheel_z}" rpy="0 0 0"/>
+      <child link="${prefix}_wheel"/>
+      <parent link="chassis"/>
+      <axis xyz="0 1 0" rpy="0 0 0"/>
+      <limit effort="10000" velocity="1000"/>
+      <dynamics damping="0.0" friction="0.0"/>
+    </joint>
+  </xacro:macro>
+
+  <xacro:wheel prefix="front_left" x_reflect="1" y_reflect="1"/>
+  <xacro:wheel prefix="front_right" x_reflect="1" y_reflect="-1"/>
+  <xacro:wheel prefix="back_left" x_reflect="-1" y_reflect="1"/>
+  <xacro:wheel prefix="back_right" x_reflect="-1" y_reflect="-1"/>
+
+  <link name="hokuyo">
+    <visual name='hokuyo_visual'>
+      <origin xyz="0 0 0" rpy=" 0 0 0"/>
+      <geometry>
+        <mesh filename="package://my_robot/meshes/hokuyo.dae"/>
+      </geometry>
+    </visual>
+    <collision name='hokuyo_collision'>
+      <origin xyz="0 0 0" rpy=" 0 0 0"/>
+      <geometry>
+        <box size="0.1 0.1 0.1"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="1e-5"/>
+      <origin xyz="0.0 0 0" rpy=" 0 0 0"/>
+      <inertia
+          ixx="1e-6" ixy="0" ixz="0"
+          iyy="1e-6"   iyz="0"
+          izz="1e-6"
+      />
+    </inertial>
+  </link>
+  <joint type="fixed" name="hokuyo_joint">
+    <origin xyz="${lidar_x} 0 ${lidar_z}" rpy="0 0 0"/>
+    <child link="hokuyo"/>
+    <parent link="chassis"/>
+    <axis xyz="0 1 0" rpy="0 0 0"/>
+  </joint>
+
+  <link name='chassis'>
+    <pose>0 0 0.1 0 0 0</pose>
+
+    <inertial>
+      <mass value="${chassis_mass}"/>
+      <origin xyz="0.0 0 0" rpy=" 0 0 0"/>
+      <inertia
+          ixx="1e-3" ixy="0" ixz="0"
+          iyy="1e-3" iyz="0"
+          izz="1e-3"
+      />
+    </inertial>
+
+    <collision name='collision'>
+      <origin xyz="0 0 0" rpy=" 0 0 0"/>
+      <geometry>
+        <box size="${chassis_length} ${chassis_width} ${chassis_height}"/>
+      </geometry>
+    </collision>
+
+    <visual name='chassis_visual'>
+      <origin xyz="0 0 0" rpy=" 0 0 0"/>
+      <geometry>
+        <box size="${chassis_length} ${chassis_width} ${chassis_height}"/>
+      </geometry>
+      <material name="white"/>
+    </visual>
+  </link>
+
+  <xacro:include filename="$(find my_robot)/urdf/rover.gazebo" />
+
+</robot>
